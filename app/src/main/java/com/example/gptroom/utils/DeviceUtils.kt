@@ -8,7 +8,8 @@ import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.core.app.ActivityCompat
-import java.util.*
+import java.util.UUID
+
 
 object DeviceUtils {
 
@@ -20,9 +21,11 @@ object DeviceUtils {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
     // Get UUID based on ANDROID_ID
-    fun getUUID(context: Context): String {
-        val androidId = getAndroidId(context)
-        return UUID.nameUUIDFromBytes(androidId.toByteArray()).toString()
+    fun getUUID(context: Context): Long {
+
+        val uuid = UUID.randomUUID()
+        val mostSignificantBits = uuid.mostSignificantBits
+        return mostSignificantBits
     }
     // Get IMEI (requires READ_PHONE_STATE permission)
     fun getIMEI(context: Context): String? {

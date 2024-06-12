@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gptroom.utils.DeviceUtils
 import com.netease.lava.nertc.sdk.NERtcCallback
 import com.netease.lava.nertc.sdk.NERtcConstants
 import com.netease.lava.nertc.sdk.NERtcEx
@@ -35,7 +36,7 @@ class AudioCallActivity : AppCompatActivity() ,NERtcCallback,OnClickListener{
     private val TAG = "AudioCallActivity"
     private val APP_KEY = "3c4f31f7f277ac27ec689b97b304da6d"
 
-    private var mRoomId: String? = null
+    private var mRoomId: String? = "GPT40666888"
     private var mUserId: Long = 0
     private var mEnableLocalAudio = true
     private var mJoinChannel = false
@@ -54,22 +55,11 @@ class AudioCallActivity : AppCompatActivity() ,NERtcCallback,OnClickListener{
     private var mRoomTittleTv: TextView? = null
 
 
-    companion object {
-        const val EXTRA_ROOM_ID = "extra_room_id"
-        const val EXTRA_USER_ID = "extra_user_id"
-        fun startActivity(from: Activity, roomId: String?, userId: Long) {
-            val intent = Intent(from, AudioCallActivity::class.java)
-            intent.putExtra(EXTRA_ROOM_ID, roomId)
-            intent.putExtra(EXTRA_USER_ID, userId)
-            from.startActivity(intent)
-        }
-    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_audio_call)
-        mRoomId = intent.getStringExtra(EXTRA_ROOM_ID)
-        mUserId = intent.getLongExtra(EXTRA_USER_ID, -1)
+        mUserId = DeviceUtils.getUUID(this);
         initView()
         setupNERtc()
         joinChannel(mUserId, mRoomId)
