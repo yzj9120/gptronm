@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gptroom.utils.DeviceUtils
 import java.util.Random
 
 class MainActivity : AppCompatActivity() {
@@ -30,22 +31,22 @@ class MainActivity : AppCompatActivity() {
         mRoomIdEt = findViewById(R.id.room_id)
         mUserIdEt = findViewById(R.id.user_id)
         mRoomIdEt?.setText(RoomId)
-        mUserIdEt?.setText(Random().nextInt(100000).toString())
+        mUserIdEt?.setText(DeviceUtils.generateUUID())
         mBackIv?.setOnClickListener(View.OnClickListener { finish() })
         mJoinBtn?.setOnClickListener(View.OnClickListener {
             val roomIdEdit = mRoomIdEt?.getText()
-            if (roomIdEdit == null || roomIdEdit.length <= 0) {
+            if (roomIdEdit.isNullOrEmpty()) {
                 return@OnClickListener
             }
             val userIdEdit = mUserIdEt?.getText()
-            if (userIdEdit == null || userIdEdit.length <= 0) {
+            if (userIdEdit.isNullOrEmpty()) {
                 return@OnClickListener
             }
-//            startActivity(
-//                this@VideoCallEntryActivity,
-//                roomIdEdit.toString(),
-//                userIdEdit.toString().toLong()
-//            )
+            AudioCallActivity.startActivity(
+                this,
+                roomIdEdit.toString(),
+                userIdEdit.toString().toLong()
+            )
         })
     }
 
