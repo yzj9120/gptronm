@@ -10,6 +10,9 @@
 
     <style name="RoundImage">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item> <!-- 根据需要调整圆角半径 -->
+        <item name="cornerSize">50%</item> <!-- 根据需要调整圆角半径 -->
     </style>
+
+
+
 </resources>

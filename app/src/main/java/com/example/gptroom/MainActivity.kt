@@ -42,11 +42,11 @@ class MainActivity : AppCompatActivity() {
             if (userIdEdit.isNullOrEmpty()) {
                 return@OnClickListener
             }
-            AudioCallActivity.startActivity(
-                this,
-                roomIdEdit.toString(),
-                userIdEdit.toString().toLong()
-            )
+//            AudioCallActivity.startActivity(
+//                this,
+//                roomIdEdit.toString(),
+//                userIdEdit.toString().toLong()
+//            )
         })
     }
 
