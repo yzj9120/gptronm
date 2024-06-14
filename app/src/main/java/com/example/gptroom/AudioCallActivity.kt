@@ -1,20 +1,15 @@
 package com.example.gptroom
 
-import android.annotation.SuppressLint
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.MediaRecorder
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.airbnb.lottie.LottieAnimationView
 import com.example.gptroom.utils.DeviceUtils
 import com.netease.lava.nertc.sdk.NERtc
@@ -25,17 +20,8 @@ import com.netease.lava.nertc.sdk.NERtcOption
 import com.netease.lava.nertc.sdk.NERtcParameters
 import com.netease.lava.nertc.sdk.NERtcUserJoinExtraInfo
 import com.netease.lava.nertc.sdk.NERtcUserLeaveExtraInfo
-import com.netease.lava.nertc.sdk.audio.NERtcAudioFrame
-import com.netease.lava.nertc.sdk.audio.NERtcAudioFrameObserver
 import com.netease.lava.nertc.sdk.audio.NERtcAudioFrameOpMode
 import com.netease.lava.nertc.sdk.audio.NERtcAudioFrameRequestFormat
-import com.netease.lava.nertc.sdk.stats.NERtcAudioRecvStats
-import com.netease.lava.nertc.sdk.stats.NERtcAudioSendStats
-import com.netease.lava.nertc.sdk.stats.NERtcNetworkQualityInfo
-import com.netease.lava.nertc.sdk.stats.NERtcStats
-import com.netease.lava.nertc.sdk.stats.NERtcStatsObserver
-import com.netease.lava.nertc.sdk.stats.NERtcVideoRecvStats
-import com.netease.lava.nertc.sdk.stats.NERtcVideoSendStats
 import com.netease.lite.BuildConfig
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -47,44 +33,32 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     private val APP_KEY = "3c4f31f7f277ac27ec689b97b304da6d"
 
     private var gptId: Long = 666888123456789
-    private var mRoomId: String? = "1382"
+    private var mRoomId: String? = "123456789"
     private var mUserId: Long = 0
-    private var mEnableLocalAudio = true
     private var mJoinChannel = false
     private var mIsSpeakerPhone = true
 
-    private var mContainer: RelativeLayout? = null
-
-    private var mAudioRouteBtn: Button? = null
-    private var mMuteMicBtn: Button? = null
-    private var mHangUpBtn: Button? = null
     private var mBackIv: ImageView? = null
     private var mRoomTittleTv: TextView? = null
     private var mStatus: TextView? = null
     private var mGptview: LottieAnimationView? = null
     private var mRecordTag: LottieAnimationView? = null
-
     private var mImageButtonClose: ImageButton? = null
 
-    private var isListening = false
-    private val sampleRate = 44100
-    private val audioSource = MediaRecorder.AudioSource.MIC
-    private val channelConfig = AudioFormat.CHANNEL_IN_MONO
-    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
-    private val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
     var gptCALL = false;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_audio_call)
         mUserId = DeviceUtils.getUUID(this);
+        mUserId=3333333;
         initView()
+        requestPermissionsIfNeeded(this)
         setRecordAudioParameters()
         setPlaybackAudioParameters()
         setupNERtc()
         joinChannel(mUserId, mRoomId)
-
+        setLocalAudioEnable(true)
     }
 
     private fun setPlaybackAudioParameters() {
@@ -108,20 +82,25 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
         formatMix.opMode = NERtcAudioFrameOpMode.kNERtcAudioFrameOpModeReadWrite
         NERtcEx.getInstance().setRecordingAudioFrameParameters(formatMix)
     }
-    @SuppressLint("ObjectAnimatorBinding")
     private fun initView() {
-        mContainer = findViewById(R.id.rl_main_container)
         mGptview = findViewById(R.id.gptview)
         mStatus = findViewById(R.id.status)
         mRecordTag = findViewById(R.id.record_tag)
         mRoomTittleTv = findViewById(R.id.tv_room_id)
         mImageButtonClose = findViewById(R.id.image_close)
         mBackIv?.setOnClickListener(this)
-        mAudioRouteBtn?.setOnClickListener(this)
-        mMuteMicBtn?.setOnClickListener(this)
-        mHangUpBtn?.setOnClickListener(this)
         mImageButtonClose?.setOnClickListener(this)
 
+    }
+
+
+    private fun requestPermissionsIfNeeded(context: Activity?) {
+        val missedPermissions = NERtc.checkPermission(context)
+        if (missedPermissions.size > 0) {
+            ActivityCompat.requestPermissions(
+                context!!, missedPermissions.toTypedArray<String>(), 100
+            )
+        }
     }
 
     /**
@@ -130,12 +109,16 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     private fun setupNERtc() {
         val parameters = NERtcParameters()
         NERtcEx.getInstance().setParameters(parameters) //先设置参数，后初始化
+
+
         val options = NERtcOption()
+
         if (BuildConfig.DEBUG) {
             options.logLevel = NERtcConstants.LogLevel.INFO
         } else {
             options.logLevel = NERtcConstants.LogLevel.WARNING
         }
+
         try {
             NERtcEx.getInstance().init(applicationContext, APP_KEY, this, options)
         } catch (e: Exception) {
@@ -150,32 +133,32 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
             }
         }
         //设置质量透明回调
-        NERtcEx.getInstance().setStatsObserver(object : NERtcStatsObserver {
-            override fun onRtcStats(neRtcStats: NERtcStats) {
-                //  Log.d(TAG, "onRtcStats:" + neRtcStats.toString())
-
-            }
-
-            override fun onLocalAudioStats(neRtcAudioSendStats: NERtcAudioSendStats) {
-
-                Log.d(TAG, "onLocalAudioStats:" + neRtcAudioSendStats.toString())
-            }
-
-            override fun onRemoteAudioStats(neRtcAudioRecvStats: Array<NERtcAudioRecvStats>) {
-//                Log.d(TAG, "onRemoteAudioStats:" + neRtcAudioRecvStats.size)
-//                val tmp = neRtcAudioRecvStats[0].layers[0]
-//                Log.d(TAG, "音量:" + tmp.volume)
-
-            }
-
-            override fun onLocalVideoStats(neRtcVideoSendStats: NERtcVideoSendStats) {}
-            override fun onRemoteVideoStats(neRtcVideoRecvStats: Array<NERtcVideoRecvStats>) {}
-            override fun onNetworkQuality(neRtcNetworkQualityInfos: Array<NERtcNetworkQualityInfo>) {
-//                Log.d(TAG, "onNetworkQuality:" + neRtcNetworkQualityInfos.size)
-//                val tmp = neRtcNetworkQualityInfos[0]
-//                Log.d(TAG, "网络质量:" + NetQuality.getMsg(tmp.downStatus) + "---")
-            }
-        })
+//        NERtcEx.getInstance().setStatsObserver(object : NERtcStatsObserver {
+//            override fun onRtcStats(neRtcStats: NERtcStats) {
+//                //  Log.d(TAG, "onRtcStats:" + neRtcStats.toString())
+//
+//            }
+//
+//            override fun onLocalAudioStats(neRtcAudioSendStats: NERtcAudioSendStats) {
+//
+//                Log.d(TAG, "onLocalAudioStats:" + neRtcAudioSendStats.toString())
+//            }
+//
+//            override fun onRemoteAudioStats(neRtcAudioRecvStats: Array<NERtcAudioRecvStats>) {
+////                Log.d(TAG, "onRemoteAudioStats:" + neRtcAudioRecvStats.size)
+////                val tmp = neRtcAudioRecvStats[0].layers[0]
+////                Log.d(TAG, "音量:" + tmp.volume)
+//
+//            }
+//
+//            override fun onLocalVideoStats(neRtcVideoSendStats: NERtcVideoSendStats) {}
+//            override fun onRemoteVideoStats(neRtcVideoRecvStats: Array<NERtcVideoRecvStats>) {}
+//            override fun onNetworkQuality(neRtcNetworkQualityInfos: Array<NERtcNetworkQualityInfo>) {
+////                Log.d(TAG, "onNetworkQuality:" + neRtcNetworkQualityInfos.size)
+////                val tmp = neRtcNetworkQualityInfos[0]
+////                Log.d(TAG, "网络质量:" + NetQuality.getMsg(tmp.downStatus) + "---")
+//            }
+//        })
 
 //        NERtcEx.getInstance().setAudioFrameObserver(object : NERtcAudioFrameObserver {
 //            override fun onRecordFrame(neRtcAudioFrame: NERtcAudioFrame) {
@@ -226,15 +209,19 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
 //                )
 //            }
 //        })
-        setLocalAudioEnable(true)
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         super.onBackPressed()
         exit()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if(!mJoinChannel){
+            joinChannel(mUserId, mRoomId)
+        }
+    }
     /**
      * 退出房间并关闭页面
      */
@@ -264,12 +251,10 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
      * @param enable
      */
     private fun setLocalAudioEnable(enable: Boolean) {
-        mEnableLocalAudio = enable
-        NERtcEx.getInstance().enableLocalAudio(mEnableLocalAudio)
+        NERtcEx.getInstance().enableLocalAudio(enable)
         NERtc.getInstance().setAudioProfile(
             NERtcConstants.AudioScenario.SPEECH, NERtcConstants.AudioProfile.MIDDLE_QUALITY
         )
-
     }
 
     /**
@@ -334,6 +319,7 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
         if (userId == gptId) {
             gptCALL = true;
             mStatus?.text = "我在听"
+            mStatus?.setTextColor(resources.getColor(R.color.white))
         }
         NERtcEx.getInstance().subscribeRemoteAudioStream(userId, true)
     }
@@ -357,59 +343,11 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     override fun onClientRoleChange(old: Int, newRole: Int) {
         Log.i(TAG, "onUserAudioStart old: $old, newRole : $newRole")
     }
-
-    /**
-     * 切换听筒和扬声器
-     */
-    private fun changeAudioRoute() {
-        mIsSpeakerPhone = !mIsSpeakerPhone
-        NERtcEx.getInstance().setSpeakerphoneOn(mIsSpeakerPhone)
-        if (mIsSpeakerPhone) {
-            mAudioRouteBtn!!.text = "使用听筒"
-        } else {
-            mAudioRouteBtn!!.text = "使用扬声器"
-        }
-    }
-
-    /**
-     * 改变音频可用状态
-     */
-    private fun changeAudioEnable() {
-        mEnableLocalAudio = !mEnableLocalAudio
-        setLocalAudioEnable(mEnableLocalAudio)
-        if (mEnableLocalAudio) {
-            mMuteMicBtn!!.text = "关闭麦克风"
-        } else {
-            mMuteMicBtn!!.text = "打开麦克风"
-        }
-    }
-
     override fun onClick(view: View) {
         val id = view.id
         if (id == R.id.image_close) {
+            leaveChannel()
             finish();
         }
     }
-
-    /**
-     * 网络状态枚举
-     */
-    enum class NetQuality(private val num: Int, private val msg: String) {
-        UNKNOWN(0, "未知"), EXCELLENT(1, "非常好"), GOOD(2, "好"), POOR(3, "不太好"), BAD(
-            4, "差"
-        ),
-        VERYBAD(5, "非常差"), DOWN(6, "无网络");
-
-        companion object {
-            fun getMsg(code: Int): String {
-                for (item in entries) {
-                    if (item.num == code) {
-                        return item.msg
-                    }
-                }
-                return "未定义"
-            }
-        }
-    }
-
 }
