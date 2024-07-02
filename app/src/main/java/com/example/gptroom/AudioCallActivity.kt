@@ -11,7 +11,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.airbnb.lottie.LottieAnimationView
-import com.example.gptroom.utils.DeviceUtils
 import com.netease.lava.nertc.sdk.NERtc
 import com.netease.lava.nertc.sdk.NERtcCallback
 import com.netease.lava.nertc.sdk.NERtcConstants
@@ -32,12 +31,10 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     private val TAG = "AudioCallActivity"
     private val APP_KEY = "3c4f31f7f277ac27ec689b97b304da6d"
 
-    private var gptId: Long = 666888123456789
-    private var mRoomId: String? = "123456789"
-    private var mUserId: Long = 0
+    private var gptId: Long = 6668881234567890
+    private var mRoomId: String? = "12345678900"
+    private var mUserId: Long = 98988
     private var mJoinChannel = false
-    private var mIsSpeakerPhone = true
-
     private var mBackIv: ImageView? = null
     private var mRoomTittleTv: TextView? = null
     private var mStatus: TextView? = null
@@ -50,8 +47,7 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio_call)
-        mUserId = DeviceUtils.getUUID(this);
-        mUserId=3333333;
+       /// mUserId = DeviceUtils.getUUID(this);
         initView()
         requestPermissionsIfNeeded(this)
         setRecordAudioParameters()
@@ -109,6 +105,7 @@ class AudioCallActivity : AppCompatActivity(), NERtcCallback, View.OnClickListen
     private fun setupNERtc() {
         val parameters = NERtcParameters()
         NERtcEx.getInstance().setParameters(parameters) //先设置参数，后初始化
+
 
 
         val options = NERtcOption()
